@@ -19,7 +19,7 @@ from sklearn.metrics import classification_report
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("C:/Users/Harsh/PyCharmMiscProject/weatherAUS_rainfall_prediction_dataset_cleaned.csv")
+    df = pd.read_csv("weatherAUS_rainfall_prediction_dataset_cleaned.csv")
     return df
 data = load_data()
 sample = load_data()
