@@ -16,10 +16,10 @@ from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 import seaborn as  sns
 from sklearn.metrics import classification_report
-
+st.title("RainPrediction For Tomorrow")
 @st.cache_data
 def load_data():
-    df = pd.read_csv("weatherAUS_rainfall_prediction_dataset_cleaned.csv")
+    df = pd.read_csv("C:/Users/Harsh/PyCharmMiscProject/weatherAUS_rainfall_prediction_dataset_cleaned.csv")
     return df
 data = load_data()
 sample = load_data()
@@ -223,7 +223,7 @@ if v3:
      st.write("Scores:",scores)
      st.write("scores mean",np.mean(scores))
 
-st.title("RainPrediction For Tomorrow")
+
 col1,col2 = st.columns([1,1])
 pred = st.sidebar.checkbox("prediction")
 if pred:
