@@ -10,23 +10,21 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from xgboost import XGBClassifier
-from sklearn.metrics import confusion_matrix
-import streamlit as st
+from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import GridSearchCV
+from tensorflow import keras
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import classification_report
-from tensorflow import keras
+import streamlit as st
 
 st.title("RainPrediction For Tomorrow")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("weatherAUS_rainfall_prediction_dataset_cleaned.csv")
-    return df
+    return pd.read_csv("weatherAUS_rainfall_prediction_dataset_cleaned.csv")
 
 data = load_data()
-sample = load_data()
+sample_data = data.copy()
 
 c1 = st.sidebar.checkbox("Show Original data")
 
@@ -93,15 +91,9 @@ if c9:
     st.write("xtest", x_test.shape)
     st.write("ytest", y_test.shape)
 
-@st.cache_resource
-def scaler_data(x_train):
-    scaler = StandardScaler()
-    scaler.fit(x_train)
-    return scaler
+scaler = StandardScaler()
 
-scaler = scaler_data(x_train)
-
-x_train = scaler.transform(x_train)
+x_train = scaler.fit_transform(x_train)
 x_test = scaler.transform(x_test)
 
 xg = XGBClassifier(random_state=42)
@@ -130,9 +122,19 @@ st.sidebar.subheader('To Build Model')
 
 modelname = st.sidebar.selectbox(
     "select model",
-    ['linear', 'xgb', 'decisontree', 'randomforest',
-     'gradientboost', 'adaboost', 'svm',
-     'knc', 'gusianNB', 'gridsearchmodel', 'Kerastenserflow']
+    [
+        'linear',
+        'xgb',
+        'decisontree',
+        'randomforest',
+        'gradientboost',
+        'adaboost',
+        'svm',
+        'knc',
+        'gusianNB',
+        'gridsearchmodel',
+        'Kerastenserflow'
+    ]
 )
 
 build = st.sidebar.button("Build Model")
@@ -183,13 +185,20 @@ if build:
             metrics=['accuracy']
         )
 
-        model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=0)
+        model.fit(
+            x_train,
+            y_train,
+            epochs=10,
+            batch_size=32,
+            verbose=0
+        )
 
         loss, accuracy = model.evaluate(x_test, y_test)
 
         st.write("Test data Accuracy", accuracy)
 
     if modelname != 'Kerastenserflow':
+
         model.fit(x_train, y_train)
 
         scores = cross_val_score(model, x_train, y_train, cv=5)
@@ -203,9 +212,17 @@ if build:
     st.success("Model Built Successfully")
 
 def result(model, x_test, y_test):
+
     ypred = model.predict(x_test)
-    ans = classification_report(y_test, ypred, output_dict=True)
+
+    ans = classification_report(
+        y_test,
+        ypred,
+        output_dict=True
+    )
+
     df_report = pd.DataFrame(ans).transpose()
+
     return df_report, ypred
 
 b2 = st.sidebar.button("view result")
@@ -213,6 +230,7 @@ b2 = st.sidebar.button("view result")
 if b2:
 
     if st.session_state.model is None:
+
         st.error("First Build Model")
 
     else:
@@ -221,20 +239,31 @@ if b2:
         modelname = st.session_state.modelname
 
         if modelname != 'Kerastenserflow':
+
             accuracy, ypred = result(model, x_test, y_test)
+
             st.text("Result:")
             st.write(accuracy)
 
         else:
+
             ypred = (model.predict(x_test) > 0.5).astype(int)
-            accuracy = classification_report(y_test, ypred, output_dict=True)
+
+            accuracy = classification_report(
+                y_test,
+                ypred,
+                output_dict=True
+            )
+
             ans = pd.DataFrame(accuracy).transpose()
+
             st.text("Accuracy:")
             st.write(ans)
 
         cm = confusion_matrix(y_test, ypred)
 
         fig, ax = plt.subplots()
+
         sns.heatmap(cm, annot=True, fmt='d', ax=ax)
 
         st.pyplot(fig)
@@ -246,6 +275,7 @@ pred = st.sidebar.checkbox("prediction")
 if pred:
 
     if st.session_state.model is None:
+
         st.error("First Build Model")
 
     else:
@@ -253,112 +283,125 @@ if pred:
         model = st.session_state.model
         modelname = st.session_state.modelname
 
-        Location = col1.selectbox("Select Location", sample['Location'].unique())
-        MinTemp = col2.number_input("Select Min Temp", -11.0, 40.0)
-        MaxTemp = col1.number_input("Select Max Temp", -11.0, 40.0)
+        Location = col1.selectbox(
+            "Select Location",
+            sample_data['Location'].unique()
+        )
+
+        MinTemp = col2.number_input(
+            "Select Min Temp",
+            -11.0,
+            40.0
+        )
+
+        MaxTemp = col1.number_input(
+            "Select Max Temp",
+            -11.0,
+            40.0
+        )
 
         Rainfall = col2.number_input(
             "Select Rainfall(mm)",
-            float(sample['Rainfall'].min()),
-            float(sample['Rainfall'].max())
+            float(sample_data['Rainfall'].min()),
+            float(sample_data['Rainfall'].max())
         )
 
         Evaporation = col1.number_input(
             "Evaporation(mm)",
-            float(sample['Evaporation'].min()),
-            float(sample['Evaporation'].max())
+            float(sample_data['Evaporation'].min()),
+            float(sample_data['Evaporation'].max())
         )
 
         Sunshine = col2.number_input(
             "Sunshine(hours a day)",
-            float(sample['Sunshine'].min()),
-            float(sample['Sunshine'].max())
+            float(sample_data['Sunshine'].min()),
+            float(sample_data['Sunshine'].max())
         )
 
         WindGustDir = col1.selectbox(
             "Wind direction for strongest wind of a day",
-            sample['WindGustDir'].unique()
+            sample_data['WindGustDir'].unique()
         )
 
         WindGustSpeed = col2.number_input(
             "Speed of Strongest wind of a day",
-            float(sample['WindGustSpeed'].min()),
-            float(sample['WindGustSpeed'].max())
+            float(sample_data['WindGustSpeed'].min()),
+            float(sample_data['WindGustSpeed'].max())
         )
 
         WindDir9am = col1.selectbox(
             "Wind direction for 9am",
-            sample['WindDir9am'].unique()
+            sample_data['WindDir9am'].unique()
         )
 
         WindDir3pm = col2.selectbox(
             "Wind direction for 3PM",
-            sample['WindDir3pm'].unique()
+            sample_data['WindDir3pm'].unique()
         )
 
         WindSpeed9am = col1.number_input(
             "Wind speed 9am",
-            float(sample['WindSpeed9am'].min()),
-            float(sample['WindSpeed9am'].max())
+            float(sample_data['WindSpeed9am'].min()),
+            float(sample_data['WindSpeed9am'].max())
         )
 
         WindSpeed3pm = col2.number_input(
             "Wind speed 3pm",
-            float(sample['WindSpeed3pm'].min()),
-            float(sample['WindSpeed3pm'].max())
+            float(sample_data['WindSpeed3pm'].min()),
+            float(sample_data['WindSpeed3pm'].max())
         )
 
         Humidity9am = col1.number_input(
             "Humidity9am(%)",
-            float(sample['Humidity9am'].min()),
-            float(sample['Humidity9am'].max())
+            float(sample_data['Humidity9am'].min()),
+            float(sample_data['Humidity9am'].max())
         )
 
         Humidity3pm = col2.number_input(
             "Humidity3pm(%)",
-            float(sample['Humidity3pm'].min()),
-            float(sample['Humidity3pm'].max())
+            float(sample_data['Humidity3pm'].min()),
+            float(sample_data['Humidity3pm'].max())
         )
 
         Pressure9am = col1.number_input(
             "Pressure9am",
-            float(sample['Pressure9am'].min()),
-            float(sample['Pressure9am'].max())
+            float(sample_data['Pressure9am'].min()),
+            float(sample_data['Pressure9am'].max())
         )
 
         Pressure3pm = col2.number_input(
             "Pressure3pm",
-            float(sample['Pressure3pm'].min()),
-            float(sample['Pressure3pm'].max())
+            float(sample_data['Pressure3pm'].min()),
+            float(sample_data['Pressure3pm'].max())
         )
 
         Cloud9am = col1.number_input(
             "Cloud9am(fraction of sky covered by clouds)",
-            float(sample['Cloud9am'].min()),
-            float(sample['Cloud9am'].max())
+            float(sample_data['Cloud9am'].min()),
+            float(sample_data['Cloud9am'].max())
         )
 
         Cloud3pm = col2.number_input(
             "Cloud3pm(fraction of sky covered by clouds)",
-            float(sample['Cloud3pm'].min()),
-            float(sample['Cloud3pm'].max())
+            float(sample_data['Cloud3pm'].min()),
+            float(sample_data['Cloud3pm'].max())
         )
 
         Temp9am = col1.number_input(
             "Temp9am",
-            float(sample['Temp9am'].min()),
-            float(sample['Temp9am'].max())
+            float(sample_data['Temp9am'].min()),
+            float(sample_data['Temp9am'].max())
         )
 
         Temp3pm = col2.number_input(
             "Temp3pm",
-            float(sample['Temp3pm'].min()),
-            float(sample['Temp3pm'].max())
+            float(sample_data['Temp3pm'].min()),
+            float(sample_data['Temp3pm'].max())
         )
 
         RainToday = col1.selectbox(
             "RainToday",
-            sample['RainToday'].unique()
+            sample_data['RainToday'].unique()
         )
 
         check = pd.DataFrame([{
@@ -390,8 +433,13 @@ if pred:
         if st.button("Predict Rain Tomorrow"):
 
             if modelname == 'Kerastenserflow':
-                pred = (model.predict(check) > 0.5).astype(int)[0][0]
+
+                pred = (
+                    model.predict(check) > 0.5
+                ).astype(int)[0][0]
+
             else:
+
                 pred = model.predict(check)[0]
 
             if pred == 1:
