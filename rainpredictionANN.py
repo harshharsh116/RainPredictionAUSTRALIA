@@ -16,6 +16,7 @@ from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 import seaborn as  sns
 from sklearn.metrics import classification_report
+from tensorflow import keras
 st.title("RainPrediction For Tomorrow")
 @st.cache_data
 def load_data():
@@ -170,7 +171,7 @@ if v3:
     st.write("scores mean", np.mean(scores))
  elif modelname == 'Kerastenserflow':
 
-     from tensorflow import keras
+     
 
      model = keras.Sequential([
          keras.layers.Dense(64, activation='relu', input_shape=(x_train.shape[1],)),
