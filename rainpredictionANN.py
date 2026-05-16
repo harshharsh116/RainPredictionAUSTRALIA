@@ -26,7 +26,7 @@ sample = load_data()
 c1 = st.sidebar.checkbox("Show Original data")
 if c1:
     st.header("Original Data")
-    st.dataframe(data)
+    st.dataframe(data.head(30)
 
 data.drop('Date',axis=1,inplace=True)
 c2 = st.sidebar.checkbox("EDA")
